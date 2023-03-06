@@ -12,7 +12,7 @@ A process for cleaning up unused dashboards and Looks from your Looker instance 
 
 1. Schedule content clean up automation to run every 90 days.
 2. Dashboards and Looks not used in the past 90 days are archived (soft deleted). Soft deleting a piece of content means moving it to the [Trash folder](https://cloud.google.com/looker/docs/admin-spaces#trash) which only admins have access to.
-   - Soft deleted content can be restored to its original folder from the UI or the API.
+   - Soft deleted content can be restored to its original folder from the UI or with the API ([Appendix](#appendix)).
 3. Permanently delete content (i.e. remove from Trash folder) that's been soft-deleted and goes unclaimed for another 90 days.
 
 Running the automation every 90 days allows the script to handle both soft-deleting and permanently deleting content at the same time. That said, the days are configurable within the script.
@@ -31,8 +31,8 @@ To avoid accidental deletions while settup up the automation, it's currently in 
 
 Before running the script, in `main.py` search `todo` to:
 
-- Update DAYS_BEFORE_SOFT_DELETE (# of days content is unused before archival) and DAYS_BEFORE_HARD_DELETE (# of days in trash before permanently deletion).
-- Update NOTIFICATION_EMAIL_ADDRESS (email address for content deletion notification).
+- Update `DAYS_BEFORE_SOFT_DELETE` (# of days content is unused before archival) and `DAYS_BEFORE_HARD_DELETE` (# of days in trash before permanently deletion).
+- Update `NOTIFICATION_EMAIL_ADDRESS` (email address for content deletion notification).
 - Toggle dry run of automation off/on depending on if you want content to be deleted.
 
 ## Setup
@@ -49,52 +49,53 @@ The following steps assume deployment using Google Cloud UI Console. Check out [
 
 3. Go to Cloud Functions and create a new function.
 
-   - The following APIs have to be enabled in your project Cloud Build API, Cloud Functions API, Cloud Logging API, Cloud Pub/Sub API.
+   1. The following APIs have to be enabled in your project Cloud Build API, Cloud Functions API, Cloud Logging API, Cloud Pub/Sub API.
 
 4. Cloud Functions function settings:
 
-   - **Basics**
+   1. **Basics**
 
-     - **Environment**: `1st gen`
-     - **Function name**: `looker-content-cleanup-automation`
-     - **Region**: `us-west1` (or preferred region)
-     - **Trigger type**: `HTTP`
-     - **Authentication**: `Require authentication`
-     - **Require HTTPS**: `Enabled`
-     - Select `Save`
+      - **Environment**: `1st gen`
+      - **Function name**: `looker-content-cleanup-automation`
+      - **Region**: `us-west1` (or preferred region)
+      - **Trigger type**: `HTTP`
+      - **Authentication**: `Require authentication`
+      - **Require HTTPS**: `Enabled`
+      - Select `Save`
 
-   - **Runtime, build, connections and security settings**
+   2. **Runtime, build, connections and security settings**
 
-     - **Runtime**
-       - **Memory allocated**: `512 MB`
-       - **Timeout**: `540`
-       - **Runtime service account**: `App Engine default service account`
-     - **Security and Image Repo**
-       - **Reference a Secret**: reference the `looker-base-url` secret created in Step 2 and map it to the `LOOKERSDK_BASE_URL` environment variable.
-         - **Secret**: `looker-base-url`
-         - **Reference method**: `Exposed as environment variable`
-         - **Name 1**: `LOOKERSDK_BASE_URL`
-         - Select `Done`
-       - **Reference a Secret**: reference the `looker-client-id` secret created in Step 2 and map it to the `LOOKERSDK_CLIENT_ID` environment variable.
-         - **Secret**: `looker-client-id`
-         - **Reference method**: `Exposed as environment variable`
-         - **Name 1**: `LOOKERSDK_CLIENT_ID`
-         - Select `Done`
-       - **Reference a Secret**: reference the `looker-client-secret` secret created in Step 2 and map it to the `LOOKERSDK_CLIENT_SECRET` environment variable.
-         - **Secret**: `looker-client-secret`
-         - **Reference method**: `Exposed as environment variable`
-         - **Name 1**: `LOOKERSDK_CLIENT_SECRET`
-         - Select `Done`
+      - **Runtime**
+        - **Memory allocated**: `512 MB`
+        - **Timeout**: `540`
+        - **Runtime service account**: `App Engine default service account`
+      - **Security and Image Repo**
 
-   - **Code**
+        - **Reference a Secret**: reference the `looker-base-url` secret created in Step 2 and map it to the `LOOKERSDK_BASE_URL` environment variable.
+          - **Secret**: `looker-base-url`
+          - **Reference method**: `Exposed as environment variable`
+          - **Name 1**: `LOOKERSDK_BASE_URL`
+          - Select `Done`
+        - **Reference a Secret**: reference the `looker-client-id` secret created in Step 2 and map it to the `LOOKERSDK_CLIENT_ID` environment variable.
+          - **Secret**: `looker-client-id`
+          - **Reference method**: `Exposed as environment variable`
+          - **Name 1**: `LOOKERSDK_CLIENT_ID`
+          - Select `Done`
+        - **Reference a Secret**: reference the `looker-client-secret` secret created in Step 2 and map it to the `LOOKERSDK_CLIENT_SECRET` environment variable.
+          - **Secret**: `looker-client-secret`
+          - **Reference method**: `Exposed as environment variable`
+          - **Name 1**: `LOOKERSDK_CLIENT_SECRET`
+          - Select `Done`
 
-     - **Runtime**: `Python 3.9`
-     - Copy and paste the contents of `main.py` in this repository into the `main.py` file once inside Cloud Function's inline editor.
-     - **Entry point**: `main`
-       - **NOTE**: review the `todo` items listed in the script prior to deploying, otherwise the automation won't work as intended.
-     - Copy and paste the contents of `requirements.txt` in this repository to the `requirements.txt` file once inside Cloud Function's inline editor.
+   3. **Code**
 
-   - Deploy the function.
+      - **Runtime**: `Python 3.9`
+      - Copy and paste the contents of `main.py` in this repository into the `main.py` file once inside Cloud Function's inline editor.
+      - **Entry point**: `main`
+        - **NOTE**: review the `todo` items listed in the script prior to deploying, otherwise the automation won't work as intended.
+      - Copy and paste the contents of `requirements.txt` in this repository to the `requirements.txt` file once inside Cloud Function's inline editor.
+
+   4. Deploy the function.
 
 5. Go to Cloud IAM > IAM and grant the `App Engine default service account` (`<project-name>@appspot.gserviceaccount.com`) principal `Secret Manager Secret Accessor` role to access the secrets created in Step 2.
 
@@ -106,23 +107,23 @@ The following steps assume deployment using Google Cloud UI Console. Check out [
 
 8. Cloud Scheduler job settings:
 
-   - **Define the schedule**
+   1. **Define the schedule**
 
-     - **Name**: `trigger-looker-content-cleanup-automation`
-     - **Region**: `us-west1 (Oregon)` (same region as Cloud Function)
-     - **Frequency**: `0 0 1 */3 *` (every 3 months or update to desired frequency of how often the automation should run)
-     - **Timezone**: Select desired timezone the scheduled job should use
-     - Select `Continue`
+      - **Name**: `trigger-looker-content-cleanup-automation`
+      - **Region**: `us-west1 (Oregon)` (same region as Cloud Function)
+      - **Frequency**: `0 0 1 */3 *` (every 3 months or update to desired frequency of how often the automation should run)
+      - **Timezone**: Select desired timezone the scheduled job should use
+      - Select `Continue`
 
-   - **Configure the execution**
+   2. **Configure the execution**
 
-     - **Target type**: `HTTP`
-     - **URL**: Trigger URL from function created in Step 4
-     - **HTTP method**: `POST`
-     - **Auth header**: `Add OIDC token`
-     - **Service account**: `App Engine default service account`
+      - **Target type**: `HTTP`
+      - **URL**: Trigger URL from function created in Step 4
+      - **HTTP method**: `POST`
+      - **Auth header**: `Add OIDC token`
+      - **Service account**: `App Engine default service account`
 
-   - Select `Create`
+   3. Select `Create`
 
 9. Test the schedule (Actions > Force run) to confirm it triggers the `looker-content-cleanup-automation` function in dry run mode.
 
