@@ -17,6 +17,17 @@ A process for cleaning up unused dashboards and Looks from your Looker instance 
 
 Running the automation every 90 days allows the script to handle both soft-deleting and permanently deleting content at the same time. That said, the days are configurable within the script.
 
+## Requirements
+
+- Looker instance in which you have Admin or at least `see_system_activity` and `schedule_external_look_emails` permissions.
+- Google Cloud Project with the following APIs enabled:
+  - Cloud Build API
+  - Cloud Functions API
+  - Cloud Logging API
+  - Cloud Pub/Sub API
+  - Cloud Scheduler API
+  - Secret Manager API
+
 ## How it works
 
 The script executes the following steps each time it is run:
@@ -66,9 +77,11 @@ The following steps assume deployment using Google Cloud UI Console. Check out [
    2. **Runtime, build, connections and security settings**
 
       - **Runtime**
+
         - **Memory allocated**: `512 MB`
         - **Timeout**: `540`
         - **Runtime service account**: `App Engine default service account`
+
       - **Security and Image Repo**
 
         - **Reference a Secret**: reference the `looker-base-url` secret created in Step 2 and map it to the `LOOKERSDK_BASE_URL` environment variable.
