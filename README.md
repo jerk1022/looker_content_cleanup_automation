@@ -1,4 +1,4 @@
-# Looker Content Cleanup Automation with Cloud Function & Cloud Scheduler
+# Looker Content Cleanup Automation with Cloud Functions & Cloud Scheduler
 
 ## Overview
 
