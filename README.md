@@ -60,8 +60,6 @@ The following steps assume deployment using Google Cloud UI Console. Check out [
 
 3. Go to Cloud Functions and create a new function.
 
-   1. The following APIs have to be enabled in your project Cloud Build API, Cloud Functions API, Cloud Logging API, Cloud Pub/Sub API.
-
 4. Cloud Functions function settings:
 
    1. **Basics**
