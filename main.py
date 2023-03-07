@@ -28,8 +28,7 @@ NOTIFICATION_EMAIL_ADDRESS = "email@address.com"
 
 
 def main(request):
-    """ Run the main function.
-    """
+
     # Run a System Activity query to get unused content in past 90 days, archive (soft delete) the content, then send an email with a list of the content.
     unused_content_query_id = get_unused_content_query_id(
         DAYS_BEFORE_SOFT_DELETE)
@@ -166,7 +165,7 @@ def get_deleted_content(query_id: str):
     """ Run a query against System Activity to get a list of soft deleted content.
 
     Returns:
-      A list of dictionaries, where each dictionary represents an unused dashboard or Look.
+      A list of dictionaries, where each dictionary represents a deleted dashboard or Look.
     """
     unused_content = json.loads(sdk.run_query(
         query_id=query_id,
