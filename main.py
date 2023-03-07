@@ -74,9 +74,6 @@ def main(request):
 def get_unused_content_query_id(days: int):
     """ Get the query ID for a System Activity query which returns all content that hasn't been used in at least 90 days. 
 
-    Args:
-      days (int): The number of days a content should be unused for before soft-deleting it.
-
     Returns:
       A re-useable query ID that can be used to run the query & send a schedule with the query's results.
     """
@@ -111,9 +108,6 @@ def get_unused_content_query_id(days: int):
 def get_unused_content(query_id: str):
     """ Run a query against System Activity to get a list of unused content.
 
-    Args:
-      query_id (str): The ID of the query.
-
     Returns:
       A list of dictionaries, where each dictionary represents an unused dashboard or Look.
     """
@@ -128,9 +122,6 @@ def get_unused_content(query_id: str):
 
 def get_deleted_content_query_id(days: int):
     """ Get the query ID for a System Activity query which returns all content that's been soft deleted for 90+ days. 
-
-    Args:
-      days (int): The number of days a content should be soft deleted for before hard deleting it.
 
     Returns:
       A re-useable query ID that can be used to run the query & send a schedule with the query's results.
@@ -174,9 +165,6 @@ def get_deleted_content_query_id(days: int):
 def get_deleted_content(query_id: str):
     """ Run a query against System Activity to get a list of soft deleted content.
 
-    Args:
-      query_id (str): The ID of the query.
-
     Returns:
       A list of dictionaries, where each dictionary represents an unused dashboard or Look.
     """
@@ -191,11 +179,6 @@ def get_deleted_content(query_id: str):
 
 def send_content_notification(query_id: str, delete_type: str, address: str):
     """ Send an email notification to the given email address(es) about the content that was soft/hard deleted on the given date.
-
-    Args:
-      query_id (str): The ID of the query.
-      delete_type (str): The type of content that was deleted.
-      address (str): The address to send the notification to.
     """
     date_today = datetime.today().strftime('%Y-%m-%d')
 
@@ -228,9 +211,6 @@ def send_content_notification(query_id: str, delete_type: str, address: str):
 def get_dashboard_ids(content: list):
     """ Get the dashboard IDs for the given content.
 
-    Args:
-      content (list): A list of dictionaries, where each dictionary represents a dashboard or look.
-
     Returns:
       A list of dashboard IDs.
     """
@@ -240,9 +220,6 @@ def get_dashboard_ids(content: list):
 def get_look_ids(content: list):
     """ Get the look IDs for the given content.
 
-    Args:
-      content (list): A list of dictionaries, where each dictionary represents a dashboard or look.
-
     Returns:
       A list of look IDs.
     """
@@ -251,9 +228,6 @@ def get_look_ids(content: list):
 
 def soft_delete_dashboard(dashboard_id: str):
     """ Soft delete the given dashboard.
-
-    Args:
-      dashboard_id: The ID of the dashboard to soft delete.
     """
     # todo: update to `deleted=True` when ready to run automation. Leave as is to do a dry run (run queries & send email, without deleting content).
     dashboard = models40.WriteDashboard(deleted=False)
@@ -266,9 +240,6 @@ def soft_delete_dashboard(dashboard_id: str):
 
 def soft_delete_look(look_id: str):
     """ Soft delete the given look.
-
-    Args:
-      look_id: The ID of the look to soft delete.
     """
     # todo: update to `deleted=True` when ready to run automation. Leave as is to do a dry run (run queries & send email, without deleting content).
     look = models40.WriteLookWithQuery(deleted=False)
@@ -281,9 +252,6 @@ def soft_delete_look(look_id: str):
 
 def hard_delete_dashboard(dashboard_id: str):
     """ Hard (permanently) delete a dashboard from the instanace. There is no undo for this kind of delete!
-
-    Args:
-      dashboard_id: The ID of the dashboard to hard delete.
     """
     try:
         # todo: uncomment delete_dashboard method when ready to run automation. Leave as is to do a dry run (run queries & send email, without deleting content).
@@ -295,9 +263,6 @@ def hard_delete_dashboard(dashboard_id: str):
 
 def hard_delete_look(look_id: str):
     """ Hard (permanently) delete a Look from the instanace. There is no undo for this kind of delete!
-
-    Args:
-      look_id: The ID of the dashboard to hard delete.
     """
     try:
         # todo: uncomment delete_look method when ready to run automation. Leave as is to do a dry run (run queries & send email, without deleting content).
