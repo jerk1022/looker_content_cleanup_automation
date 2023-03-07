@@ -46,6 +46,8 @@ Before running the script, in `main.py` search `todo` to:
 - Update `NOTIFICATION_EMAIL_ADDRESS` (email address for content deletion notification).
 - Toggle dry run of automation off/on depending on if you want content to be deleted.
 
+**Note**: this automation only works for Looks and user-defined dashboards. The unused content email notification will contain all LookML dashboards which can be deleted by removing their dashboard lkml file in its LookML project.
+
 ## Setup
 
 The following steps assume deployment using Google Cloud UI Console. Check out ["Your First Function: Python"](https://cloud.google.com/functions/docs/first-python) for steps to deploy using the `gcloud` command-line tool.
