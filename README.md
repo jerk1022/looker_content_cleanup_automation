@@ -6,7 +6,7 @@ This repository contains a [Google Cloud Function](https://cloud.google.com/func
 
 Implementing an automated content cleanup process will help your instance avoid content bloat and make users more productive when searching for content. [Content bloat is the effect on an organization when time is wasted finding the relevant content to answer a question or recreating content that already exists](https://sarahsnewsletter.substack.com/p/the-thrill-of-deprecating-dashboards).
 
-### Content Clean Up Process
+### Content Cleanup Process
 
 The cleanup process implemented by this script is as follows:
 
