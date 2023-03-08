@@ -182,7 +182,7 @@ def send_content_notification(query_id: str, delete_type: str, address: str):
     date_today = datetime.today().strftime('%Y-%m-%d')
 
     scheduled_plan_destination_body = models40.ScheduledPlanDestination(
-        format="json",
+        format="csv",
         type="email",
         address=address,
         message=f"List of dashboards and Looks that were {delete_type} deleted on {date_today}.\

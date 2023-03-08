@@ -8,12 +8,13 @@ Implementing an automated content cleanup process will help your instance avoid 
 
 **Content Clean Up Process**
 
-A process for cleaning up unused dashboards and Looks from your Looker instance looks something like:
+The cleanup process implemented by this script is as follows:
 
 1. Schedule content clean up automation to run every 90 days.
 2. Dashboards and Looks not used in the past 90 days are archived (soft deleted). Soft deleting a piece of content means moving it to the [Trash folder](https://cloud.google.com/looker/docs/admin-spaces#trash) which only admins have access to.
-   - Soft deleted content can be restored to its original folder from the UI or with the API ([Appendix](#appendix)).
+   - Soft deleted content can be restored to its original folder from either the UI or with the API ([Appendix](#appendix)).
 3. Permanently delete content (i.e. remove from Trash folder) that's been soft-deleted and goes unclaimed for another 90 days.
+   - **Permanently deleted content is lost forever. You cannot undo this action!**
 
 Running the automation every 90 days allows the script to handle both soft-deleting and permanently deleting content at the same time. That said, the days are configurable within the script.
 
@@ -38,9 +39,10 @@ The script executes the following steps each time it is run:
 2. Run both queries to get data for unused content and deleted content.
 3. Soft delete unused content
 4. Permanently delete content in Trash folder
-5. Send two emails containining the soft deleted and permanently deleted content in JSON format.
+5. Send two emails containining the soft deleted and permanently deleted content in CSV format.
+   1. Delivery format can be updated on [line 185 of main.py](../looker_content_cleanup_automation/main.py#L185) to any of the [accepted formats](https://developers.looker.com/api/explorer/4.0/methods/ScheduledPlan/scheduled_plan_run_once).
 
-To avoid accidental deletions while settup up the automation, it's currently in dry run / safe mode. This means the soft delete and hard delete functions are commented out in `main.py` (`soft_delete_dashboard`, `soft_delete_look`, `hard_delete_dashboard`, `hard_delete_look`).
+The script is currently in dry run / safe mode to avoid accidental content deletions while setting up this automation. This means the soft delete and hard delete functions are commented out in `main.py` (`soft_delete_dashboard`, `soft_delete_look`, `hard_delete_dashboard`, `hard_delete_look`).
 
 Before running the script, in `main.py` search `todo` to:
 
