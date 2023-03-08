@@ -7,7 +7,7 @@ It accomplishes the following tasks:
 4. Send an email notification using Looker's scheduler of all the content that was archived & permanently deleted.
 
 Search `todo` to:
-- Update DAYS_BEFORE_SOFT_DELETE (# of days content is unused before archival) and DAYS_BEFORE_HARD_DELETE (# of days in trash before permanently deletion).
+- Update DAYS_BEFORE_SOFT_DELETE (# of days content is unused before archival) and DAYS_BEFORE_HARD_DELETE (# of days in trash before permanent deletion).
 - Update NOTIFICATION_EMAIL_ADDRESS (email address for content deletion notification).
 - Toggle dry run of automation off/on.
 
