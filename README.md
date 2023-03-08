@@ -36,9 +36,9 @@ The script executes the following steps each time it is run:
 2. Run both queries to get data for unused content and deleted content.
 3. Soft delete unused content
 4. Permanently delete content in Trash folder
-5. Send two emails containining the soft deleted and permanently deleted content.
+5. Send two emails containing the soft deleted and permanently deleted content.
 
-To avoid accidental deletions while settup up the automation, it's currently in dry run / safe mode. This means the soft delete and hard delete functions are commented out in `main.py` (`soft_delete_dashboard`, `soft_delete_look`, `hard_delete_dashboard`, `hard_delete_look`).
+To avoid accidental deletions while setting up up the automation, it's currently in dry run / safe mode. This means the soft delete and hard delete functions are commented out in `main.py` (`soft_delete_dashboard`, `soft_delete_look`, `hard_delete_dashboard`, `hard_delete_look`).
 
 Before running the script, in `main.py` search `todo` to:
 
