@@ -14,7 +14,7 @@ The cleanup process implemented by this script is as follows:
 2. Dashboards and Looks not used in the past 90 days are archived (soft deleted). Soft deleting a piece of content means moving it to the [Trash folder](https://cloud.google.com/looker/docs/admin-spaces#trash) which only admins have access to.
    - Soft deleted content can be restored to its original folder from either the UI or with the API ([Appendix](#appendix)).
 3. Permanently delete content (i.e. remove from Trash folder) that's been soft-deleted and goes unclaimed for another 90 days.
-   - **Permanently deleted content is lost forever. You cannot undo this action!**
+   - ⚠️ **WARNING**: Permanently deleted content is lost forever. You cannot undo this action!
 
 Running the automation every 90 days allows the script to handle both soft-deleting and permanently deleting content at the same time. That said, the days are configurable within the script.
 
