@@ -182,7 +182,7 @@ def send_content_notification(query_id: str, delete_type: str, address: str):
     date_today = datetime.today().strftime('%Y-%m-%d')
 
     scheduled_plan_destination_body = models40.ScheduledPlanDestination(
-        format="csv",
+        format="json",
         type="email",
         address=address,
         message=f"List of dashboards and Looks that were {delete_type} deleted on {date_today}.\
@@ -228,8 +228,9 @@ def get_look_ids(content: list):
 def soft_delete_dashboard(dashboard_id: str):
     """ Soft delete the given dashboard.
     """
-    # todo: update to `deleted=True` when ready to run automation. Leave as is to do a dry run (run queries & send email, without deleting content).
+    # todo: to toggle off safe mode and soft delete dashboards, comment out `deleted=False`` line and uncomment `deleted=True` line
     dashboard = models40.WriteDashboard(deleted=False)
+    # dashboard = models40.WriteDashboard(deleted=True)
     try:
         sdk.update_dashboard(str(dashboard_id), body=dashboard)
         return f"Successfully soft deleted dashboard: {dashboard_id}"
@@ -240,8 +241,9 @@ def soft_delete_dashboard(dashboard_id: str):
 def soft_delete_look(look_id: str):
     """ Soft delete the given look.
     """
-    # todo: update to `deleted=True` when ready to run automation. Leave as is to do a dry run (run queries & send email, without deleting content).
+    # todo: to toggle off safe mode and soft delete Looks, comment out `deleted=False`` line and uncomment `deleted=True` line
     look = models40.WriteLookWithQuery(deleted=False)
+    # look = models40.WriteLookWithQuery(deleted=True)
     try:
         sdk.update_look(str(look_id), body=look)
         return f"Successfully soft deleted Look: {look_id}"
@@ -253,7 +255,7 @@ def hard_delete_dashboard(dashboard_id: str):
     """ Hard (permanently) delete a dashboard from the instanace. There is no undo for this kind of delete!
     """
     try:
-        # todo: uncomment delete_dashboard method when ready to run automation. Leave as is to do a dry run (run queries & send email, without deleting content).
+        # todo: to toggle off safe mode and hard delete dashboards, uncomment the delete_dashboard() method
         # sdk.delete_dashboard(str(dashboard_id))
         return f"Successfully permanently deleted dashboard: {dashboard_id}"
     except Exception as e:
@@ -264,7 +266,7 @@ def hard_delete_look(look_id: str):
     """ Hard (permanently) delete a Look from the instanace. There is no undo for this kind of delete!
     """
     try:
-        # todo: uncomment delete_look method when ready to run automation. Leave as is to do a dry run (run queries & send email, without deleting content).
+        # todo: to toggle off safe mode and hard delete Looks, uncomment the delete_look() method
         # sdk.delete_look(str(look_id))
         return f"Successfully permanently deleted Look: {look_id}"
     except Exception as e:
