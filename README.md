@@ -21,6 +21,8 @@ Running the automation every 90 days allows the script to handle both soft-delet
 
 - Looker instance in which you have Admin or at least `see_system_activity` and `schedule_external_look_emails` permissions.
 - Google Cloud Project with the following APIs enabled:
+  - Artifact Registry API
+  - Cloud Run Admin API
   - Cloud Build API
   - Cloud Functions API
   - Cloud Logging API
@@ -66,10 +68,9 @@ The following steps assume deployment using Google Cloud UI Console. Check out [
 
    1. **Basics**
 
-      - **Environment**: `1st gen`
+      - **Environment**: `2nd gen`
       - **Function name**: `looker-content-cleanup-automation`
       - **Region**: `us-west1` (or preferred region)
-      - **Trigger type**: `HTTP`
       - **Authentication**: `Require authentication`
       - **Require HTTPS**: `Enabled`
       - Select `Save`
@@ -79,7 +80,7 @@ The following steps assume deployment using Google Cloud UI Console. Check out [
       - **Runtime**
 
         - **Memory allocated**: `512 MB`
-        - **Timeout**: `540`
+        - **Timeout**: `3600`
         - **Runtime service account**: `App Engine default service account`
 
       - **Security and Image Repo**
@@ -99,6 +100,8 @@ The following steps assume deployment using Google Cloud UI Console. Check out [
           - **Reference method**: `Exposed as environment variable`
           - **Name 1**: `LOOKERSDK_CLIENT_SECRET`
           - Select `Done`
+
+      - Select `Next`
 
    3. **Code**
 
