@@ -29,7 +29,7 @@ NOTIFICATION_EMAIL_ADDRESS = "email@address.com"
 
 def main(request):
 
-    # Run a System Activity query to get unused content in past 90 days, archive (soft delete) the content, then send an email with a list of the content.
+    # Run a System Activity query to get unused content in past 90 (default) days, archive (soft delete) the content, then send an email with a list of the content.
     unused_content_query_id = get_unused_content_query_id(
         DAYS_BEFORE_SOFT_DELETE)
     unused_content = get_unused_content(unused_content_query_id)
@@ -48,7 +48,7 @@ def main(request):
         NOTIFICATION_EMAIL_ADDRESS
     )
 
-    # Run a System Activity query to get content deleted 90+ days ago, permenantly (hard) delete the content, then send an email with a list of the content.
+    # Run a System Activity query to get content deleted 90+ (default) days ago, permenantly (hard) delete the content, then send an email with a list of the content.
     deleted_content_query_id = get_deleted_content_query_id(
         DAYS_BEFORE_HARD_DELETE)
     deleted_content = get_deleted_content(deleted_content_query_id)
@@ -71,7 +71,7 @@ def main(request):
 
 
 def get_unused_content_query_id(days: int):
-    """ Get the query ID for a System Activity query which returns all content that hasn't been used in at least 90 days. 
+    """ Get the query ID for a System Activity query which returns all content that hasn't been used in at least 90 (default) days. 
 
     Returns:
       A re-useable query ID that can be used to run the query & send a schedule with the query's results.
@@ -120,7 +120,7 @@ def get_unused_content(query_id: str):
 
 
 def get_deleted_content_query_id(days: int):
-    """ Get the query ID for a System Activity query which returns all content that's been soft deleted for 90+ days. 
+    """ Get the query ID for a System Activity query which returns all content that's been soft deleted for 90+ (default) days. 
 
     Returns:
       A re-useable query ID that can be used to run the query & send a schedule with the query's results.
@@ -162,7 +162,7 @@ def get_deleted_content_query_id(days: int):
 
 
 def get_deleted_content(query_id: str):
-    """ Run a query against System Activity to get a list of soft deleted content.
+    """ Run a query against System Activity to get a list of content soft deleted for 90+ (default) days.
 
     Returns:
       A list of dictionaries, where each dictionary represents a deleted dashboard or Look.
