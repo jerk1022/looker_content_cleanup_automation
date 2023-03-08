@@ -28,7 +28,6 @@ NOTIFICATION_EMAIL_ADDRESS = "email@address.com"
 
 
 def main(request):
-
     # Run a System Activity query to get unused content in past 90 (default) days, archive (soft delete) the content, then send an email with a list of the content.
     unused_content_query_id = get_unused_content_query_id(
         DAYS_BEFORE_SOFT_DELETE)
@@ -71,10 +70,8 @@ def main(request):
 
 
 def get_unused_content_query_id(days: int):
-    """ Get the query ID for a System Activity query which returns all content that hasn't been used in at least 90 (default) days. 
-
-    Returns:
-      A re-useable query ID that can be used to run the query & send a schedule with the query's results.
+    """ Get a re-useable query ID for a System Activity query which returns all content that hasn't been used in at least 90 (default) days. 
+    This query ID can be used to run the query and send a schedule with the query's results. 
     """
     unused_content_query = models40.WriteQuery(
         model="system__activity",
@@ -105,11 +102,7 @@ def get_unused_content_query_id(days: int):
 
 
 def get_unused_content(query_id: str):
-    """ Run a query against System Activity to get a list of unused content.
-
-    Returns:
-      A list of dictionaries, where each dictionary represents an unused dashboard or Look.
-    """
+    """ Run a query against System Activity to get a list of unused content. """
     unused_content = json.loads(sdk.run_query(
         query_id=query_id,
         result_format="json",
@@ -120,10 +113,8 @@ def get_unused_content(query_id: str):
 
 
 def get_deleted_content_query_id(days: int):
-    """ Get the query ID for a System Activity query which returns all content that's been soft deleted for 90+ (default) days. 
-
-    Returns:
-      A re-useable query ID that can be used to run the query & send a schedule with the query's results.
+    """ Get a re-usable query ID for a System Activity query which returns all content that's been soft deleted for 90+ (default) days. 
+    This query ID can be used to run the query and send a schedule with the query's results. 
     """
     deleted_query = models40.WriteQuery(
         model="system__activity",
@@ -162,11 +153,7 @@ def get_deleted_content_query_id(days: int):
 
 
 def get_deleted_content(query_id: str):
-    """ Run a query against System Activity to get a list of content soft deleted for 90+ (default) days.
-
-    Returns:
-      A list of dictionaries, where each dictionary represents a deleted dashboard or Look.
-    """
+    """ Run a query against System Activity to get a list of content soft deleted for 90+ (default) days. """
     unused_content = json.loads(sdk.run_query(
         query_id=query_id,
         result_format="json",
@@ -208,11 +195,7 @@ def send_content_notification(query_id: str, delete_type: str, address: str):
 
 
 def get_dashboard_ids(content: list):
-    """ Get the dashboard IDs for the given content.
-
-    Returns:
-      A list of dashboard IDs.
-    """
+    """ Get the dashboard IDs for the given content. """
     return [dashboard['dashboard.id'] for dashboard in content if dashboard['content_usage.content_type'] == 'dashboard' and dashboard['dashboard.id'] is not None]
 
 
@@ -226,8 +209,7 @@ def get_look_ids(content: list):
 
 
 def soft_delete_dashboard(dashboard_id: str):
-    """ Soft delete the given dashboard.
-    """
+    """ Soft delete the given dashboard. """
     # todo: to toggle off safe mode and soft delete dashboards, comment out `deleted=False`` line and uncomment `deleted=True` line
     dashboard = models40.WriteDashboard(deleted=False)
     # dashboard = models40.WriteDashboard(deleted=True)
@@ -239,8 +221,7 @@ def soft_delete_dashboard(dashboard_id: str):
 
 
 def soft_delete_look(look_id: str):
-    """ Soft delete the given look.
-    """
+    """ Soft delete the given look. """
     # todo: to toggle off safe mode and soft delete Looks, comment out `deleted=False`` line and uncomment `deleted=True` line
     look = models40.WriteLookWithQuery(deleted=False)
     # look = models40.WriteLookWithQuery(deleted=True)
@@ -252,8 +233,7 @@ def soft_delete_look(look_id: str):
 
 
 def hard_delete_dashboard(dashboard_id: str):
-    """ Hard (permanently) delete a dashboard from the instanace. There is no undo for this kind of delete!
-    """
+    """ Hard (permanently) delete a dashboard from the instanace. There is no undo for this kind of delete! """
     try:
         # todo: to toggle off safe mode and hard delete dashboards, uncomment the delete_dashboard() method
         # sdk.delete_dashboard(str(dashboard_id))
@@ -263,8 +243,7 @@ def hard_delete_dashboard(dashboard_id: str):
 
 
 def hard_delete_look(look_id: str):
-    """ Hard (permanently) delete a Look from the instanace. There is no undo for this kind of delete!
-    """
+    """ Hard (permanently) delete a Look from the instanace. There is no undo for this kind of delete! """
     try:
         # todo: to toggle off safe mode and hard delete Looks, uncomment the delete_look() method
         # sdk.delete_look(str(look_id))
