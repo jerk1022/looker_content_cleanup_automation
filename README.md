@@ -13,7 +13,7 @@ The cleanup process implemented by this script is as follows:
 1. Schedule content clean up automation to run every 90 days.
 2. Dashboards and Looks not used in the past 90 days are archived (soft deleted). Soft deleting a piece of content means moving it to the [Trash folder](https://cloud.google.com/looker/docs/admin-spaces#trash) which only admins have access to.
    - Soft deleted content can be restored to its original folder from either the UI or with the API ([Appendix](#appendix)).
-3. Permanently delete content (i.e. remove from Trash folder) that's been soft-deleted and goes unclaimed for another 90 days. Before permanently deleting dashboards, the dashboard LookML is saved to a GCS bucket.
+3. Permanently delete content (i.e. remove from Trash folder) that's been soft-deleted and goes unclaimed for another 90 days. Before permanently deleting dashboards, the dashboard LookML is saved to a [Google Cloud Storage](https://cloud.google.com/storage) bucket.
    - Permanently deleted dashboards which were backed up before deletion can be restored using the [import_dashboard_from_lookml](https://developers.looker.com/api/explorer/4.0/methods/Dashboard/import_dashboard_from_lookml?sdk=py) method.
    - ⚠️ **WARNING**: Permanently deleted content is lost forever. You cannot undo this action!
 
@@ -47,10 +47,15 @@ The script executes the following steps each time it is run:
 5. Send two emails containining the soft deleted and permanently deleted content in CSV format.
    - Delivery format can be updated on [line 185 of main.py](../looker_content_cleanup_automation/main.py#L185) to any of the [accepted formats](https://developers.looker.com/api/explorer/4.0/methods/ScheduledPlan/scheduled_plan_run_once).
 
-The script is currently in dry run / safe mode to avoid accidental content deletions while setting up this automation. This means the soft delete and hard delete functions are commented out in `main.py` (`soft_delete_dashboard`, `soft_delete_look`, `hard_delete_dashboard`, `hard_delete_look`).
+### Dry Run / Safe Mode
 
-Before running the script, in `main.py` search `todo` to:
+The script is currently in dry run / safe mode to avoid accidental content deletions while setting up this automation. This means the soft delete and hard delete functions are commented out in `main.py` (`soft_delete_dashboard`, `soft_delete_look`, `hard_delete_dashboard`, `hard_delete_look`). In dry run mode, the automation will run the queries, send the schedules, and backup dashboards that are to be hard deleted.
 
+### Required before running the script
+
+In `main.py` search `todo` to:
+
+- Update `GCP_PROJET_ID` and `GCS_BUCKET_NAME` to enable backing up dashboards to GCS before permanent deletion.
 - Update `DAYS_BEFORE_SOFT_DELETE` (# of days content is unused before archival) and `DAYS_BEFORE_HARD_DELETE` (# of days in trash before permanently deletion).
 - Update `NOTIFICATION_EMAIL_ADDRESS` (email address for content deletion notification).
 - Toggle dry run of automation off/on depending on if you want content to be deleted.
@@ -61,17 +66,49 @@ The following steps assume deployment using Google Cloud UI Console. Check out [
 
 1. Obtain a [Looker API3 Key](https://docs.looker.com/admin-options/settings/users#api3_keys)
 
-2. Go to [Cloud Secret Manager](https://cloud.google.com/secret-manager) and enable the Secret Manager API. Create the following secrets:
+2. In `main.py` update:
+
+   1. `GCP_PROJECT_ID` on [line 28](../looker_content_cleanup_automation/main.py#L28)
+   2. `DAYS_BEFORE_SOFT_DELETE` on [line 30](../looker_content_cleanup_automation/main.py#L30)
+   3. `DAYS_BEFORE_HARD_DELETE` on [line 31](../looker_content_cleanup_automation/main.py#L31)
+   4. `NOTIFICATION_EMAIL_ADDRESS` on [line 32](../looker_content_cleanup_automation/main.py#L32)
+
+3. Go to [Cloud Secret Manager](https://cloud.google.com/secret-manager) and enable the Secret Manager API. Create the following secrets:
 
    1. `looker-base-url`: secret value is your Looker instance URL (e.g. `https://my_looker_instance.cloud.looker.com/`)
    2. `looker-client-id`: secret value is the Client ID generated in Step 1.
    3. `looker-client-secret`: secret value is the Client Secret generated in Step 1.
 
-3.
+4. Go to Cloud Storage and create a new bucket.
 
-4. Go to Cloud Functions and create a new function.
+5. Cloud Storage bucket suggested settings, modify as necessary:
 
-5. Cloud Functions function settings:
+   1. **Name your bucket**: `looker-automation-dashboards-backup`
+
+      - Update the `GCS_BUCKET_NAME` variable with this value on [line 29 of main.py](../looker_content_cleanup_automation/main.py#L29).
+      - Select `Continue`
+
+   2. **Choose where to store your date**
+
+      - **Location type**: `Region`, `us-west1 (Oregon)` (or preferred type & region)
+      - Select `Continue`
+
+   3. **Choose a storage class for your data**
+
+      - `Set a default class` --> `Coldline` or `Archive`
+      - Select `Continue`
+
+   4. **Choose how to control access to objects**
+
+      - **Prevent public access**: `Enabled`
+      - **Access control**: `Uniform`
+      - Select `Continue`
+
+   5. Select `Create`
+
+6. Go to Cloud Functions and create a new function.
+
+7. Cloud Functions function suggested settings, to modify as necessary:
 
    1. **Basics**
 
@@ -120,37 +157,40 @@ The following steps assume deployment using Google Cloud UI Console. Check out [
 
    4. Deploy the function.
 
-6. Go to Cloud IAM > IAM and grant the `App Engine default service account` (`<project-name>@appspot.gserviceaccount.com`) principal `Secret Manager Secret Accessor` role to access the secrets created in Step 2.
+8. Go to Cloud IAM > IAM and grant the `App Engine default service account` (`<project-name>@appspot.gserviceaccount.com`) principal:
 
-7. Test the automation function in dry run mode (run queries and send schedules, without soft deleting or hard deleting any content).
+   1. `Secret Manager Secret Accessor` role to access the secrets created in Step 2.
+   2. `Storage Object Creator`
+
+9. Test the automation function in dry run mode (run queries, backup dashboards, and send schedules, without soft deleting or hard deleting any content).
 
    - Check out [this article](https://cloud.google.com/functions/docs/quickstart-python#test_the_function) for detailed instructions.
 
-8. Go to Cloud Scheduler and select `Schedule a job` (or `Create job`).
+10. Go to Cloud Scheduler and select `Schedule a job` (or `Create job`).
 
-9. Cloud Scheduler job settings:
+11. Cloud Scheduler job suggested settings, modify as necessary:
 
-   1. **Define the schedule**
+    1. **Define the schedule**
 
-      - **Name**: `trigger-looker-content-cleanup-automation`
-      - **Region**: `us-west1 (Oregon)` (same region as Cloud Function)
-      - **Frequency**: `0 0 1 */3 *` (every 3 months or update to desired frequency of how often the automation should run)
-      - **Timezone**: Select desired timezone the scheduled job should use
-      - Select `Continue`
+       - **Name**: `trigger-looker-content-cleanup-automation`
+       - **Region**: `us-west1 (Oregon)` (same region as Cloud Function)
+       - **Frequency**: `0 0 1 */3 *` (every 3 months or update to desired frequency of how often the automation should run)
+       - **Timezone**: Select desired timezone the scheduled job should use
+       - Select `Continue`
 
-   2. **Configure the execution**
+    2. **Configure the execution**
 
-      - **Target type**: `HTTP`
-      - **URL**: Trigger URL from function created in Step 4
-      - **HTTP method**: `POST`
-      - **Auth header**: `Add OIDC token`
-      - **Service account**: `App Engine default service account`
+       - **Target type**: `HTTP`
+       - **URL**: Trigger URL from function created in Step 4
+       - **HTTP method**: `POST`
+       - **Auth header**: `Add OIDC token`
+       - **Service account**: `App Engine default service account`
 
-   3. Select `Create`
+    3. Select `Create`
 
-10. Test the schedule (Actions > Force run) to confirm it triggers the `looker-content-cleanup-automation` function in dry run mode.
+12. Test the schedule (Actions > Force run) to confirm it triggers the `looker-content-cleanup-automation` function in dry run mode.
 
-11. After validating everything is working as expected, make the `todo` changes to `main.py` to toggle off dry run mode.
+13. After validating everything is working as expected, make the `todo` changes to `main.py` to toggle off dry run mode.
 
 ## Appendix
 
