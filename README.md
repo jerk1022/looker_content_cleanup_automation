@@ -48,7 +48,7 @@ The script executes the following steps each time it is run:
 3. Soft delete unused content.
 4. Permanently delete content in Trash folder.
    - Dashboards will be backed up to a GCS bucket before being deleted. Backups are not available for Looks.
-5. Send two emails containining the soft deleted and permanently deleted content in CSV format.
+5. Send two emails containing the soft deleted and permanently deleted content in CSV format.
    - Delivery format can be updated on [line 185 of main.py](../looker_content_cleanup_automation/main.py#L185) to any of the [accepted formats](https://developers.looker.com/api/explorer/4.0/methods/ScheduledPlan/scheduled_plan_run_once).
 
 ### Dry Run / Safe Mode
@@ -96,7 +96,7 @@ The following steps assume deployment using the Google Cloud UI Console.
       - Update `GCS_BUCKET_NAME` with this value on [line 32 of main.py](../looker_content_cleanup_automation/main.py#L32).
       - Select `Continue`
 
-   2. **Choose where to store your date**
+   2. **Choose where to store your data**
 
       - **Location type**: `Region`, `us-west1 (Oregon)` (or preferred type & region)
       - Select `Continue`
