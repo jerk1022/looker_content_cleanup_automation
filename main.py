@@ -65,7 +65,7 @@ def main(request):
     deleted_look_ids = get_look_ids(deleted_content)
 
     for dashboard_id, dashboard_title in deleted_dashboard_ids:
-        # todo: uncomment to save dashboard LookML to GCS before hard deleting it.
+        # todo: comment out backup_dashboard_lookml to disable backing up dashboard LookML to GCS feature before hard deleting the dashboard.
         backup_dashboard_lookml(dashboard_id, dashboard_title)
         hard_delete_dashboard(dashboard_id)
 
