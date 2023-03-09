@@ -133,17 +133,17 @@ The following steps assume deployment using the Google Cloud UI Console.
 
       - **Security and Image Repo**
 
-        - **Reference a Secret**: reference the `looker-base-url` secret created in Step 2 and map it to the `LOOKERSDK_BASE_URL` environment variable.
+        - **Reference a Secret**: reference the `looker-base-url` secret created in Step 3 and map it to the `LOOKERSDK_BASE_URL` environment variable.
           - **Secret**: `looker-base-url`
           - **Reference method**: `Exposed as environment variable`
           - **Name 1**: `LOOKERSDK_BASE_URL`
           - Select `Done`
-        - **Reference a Secret**: reference the `looker-client-id` secret created in Step 2 and map it to the `LOOKERSDK_CLIENT_ID` environment variable.
+        - **Reference a Secret**: reference the `looker-client-id` secret created in Step 3 and map it to the `LOOKERSDK_CLIENT_ID` environment variable.
           - **Secret**: `looker-client-id`
           - **Reference method**: `Exposed as environment variable`
           - **Name 1**: `LOOKERSDK_CLIENT_ID`
           - Select `Done`
-        - **Reference a Secret**: reference the `looker-client-secret` secret created in Step 2 and map it to the `LOOKERSDK_CLIENT_SECRET` environment variable.
+        - **Reference a Secret**: reference the `looker-client-secret` secret created in Step 3 and map it to the `LOOKERSDK_CLIENT_SECRET` environment variable.
           - **Secret**: `looker-client-secret`
           - **Reference method**: `Exposed as environment variable`
           - **Name 1**: `LOOKERSDK_CLIENT_SECRET`
