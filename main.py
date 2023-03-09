@@ -7,6 +7,7 @@ It accomplishes the following tasks:
 4. Send an email notification using Looker's scheduler of all the content that was archived & permanently deleted.
 
 Search `todo` to:
+- Update GCP_PROJET_ID and GCS_BUCKET_NAME to enable backing up dashboards to GCS before permanent deletion.
 - Update DAYS_BEFORE_SOFT_DELETE (# of days content is unused before archival) and DAYS_BEFORE_HARD_DELETE (# of days in trash before permanent deletion).
 - Update NOTIFICATION_EMAIL_ADDRESS (email address for content deletion notification).
 - Toggle dry run of automation off/on.
@@ -16,15 +17,23 @@ Last modified: March 2023
 
 import looker_sdk
 from looker_sdk import models40
+from looker_sdk import error
+from google.cloud import storage
+from google.cloud import exceptions
 import json
 from datetime import datetime
 
-sdk = looker_sdk.init40()
 
-# todo: update to desired configuration
+# todo: enter desired configuration
+GCP_PROJECT_ID = ""
+GCS_BUCKET_NAME = ""
 DAYS_BEFORE_SOFT_DELETE = 90
 DAYS_BEFORE_HARD_DELETE = 90
 NOTIFICATION_EMAIL_ADDRESS = "email@address.com"
+
+
+sdk = looker_sdk.init40()
+storage_client = storage.Client(project=GCP_PROJECT_ID)
 
 
 def main(request):
@@ -35,7 +44,7 @@ def main(request):
     unused_dashboard_ids = get_dashboard_ids(unused_content)
     unused_look_ids = get_look_ids(unused_content)
 
-    for dashboard_id in unused_dashboard_ids:
+    for dashboard_id, _ in unused_dashboard_ids:
         soft_delete_dashboard(dashboard_id)
 
     for look_id in unused_look_ids:
@@ -54,7 +63,9 @@ def main(request):
     deleted_dashboard_ids = get_dashboard_ids(deleted_content)
     deleted_look_ids = get_look_ids(deleted_content)
 
-    for dashboard_id in deleted_dashboard_ids:
+    for dashboard_id, dashboard_title in deleted_dashboard_ids:
+        # todo: uncomment to save dashboard LookML to GCS before hard deleting it.
+        backup_dashboard_lookml(dashboard_id, dashboard_title)
         hard_delete_dashboard(dashboard_id)
 
     for look_id in deleted_look_ids:
@@ -166,19 +177,19 @@ def get_deleted_content(query_id: str):
 def send_content_notification(query_id: str, delete_type: str, address: str):
     """ Send an email notification to the given email address(es) about the content that was soft/hard deleted on the given date.
     """
-    date_today = datetime.today().strftime('%Y-%m-%d')
+    created_date = datetime.today().strftime('%Y-%m-%d')
 
     scheduled_plan_destination_body = models40.ScheduledPlanDestination(
         format="csv",
         type="email",
         address=address,
-        message=f"List of dashboards and Looks that were {delete_type} deleted on {date_today}.\
+        message=f"List of dashboards and Looks that were {delete_type} deleted on {created_date}.\
         Note, LookML dashboards are unaffected by this automation, the dashboard lkml file has to be deleted from its LookML project.",
         apply_formatting=False,
         apply_vis=False
     )
     unused_content_notification = models40.WriteScheduledPlan(
-        name=f"[Looker Automation] {delete_type.capitalize()} deleted content ({date_today}).",
+        name=f"[Looker Automation] {delete_type.capitalize()} deleted content ({created_date}).",
         query_id=query_id,
         scheduled_plan_destination=[
             scheduled_plan_destination_body
@@ -191,21 +202,28 @@ def send_content_notification(query_id: str, delete_type: str, address: str):
         )
         return send_notification
     except Exception as e:
-        return f"Error sending {delete_type} delete email notification ({date_today}): {e}"
+        print(
+            f"Error sending {delete_type} delete email notification ({created_date}): {e}")
 
 
 def get_dashboard_ids(content: list):
     """ Get the dashboard IDs for the given content. """
-    return [dashboard['dashboard.id'] for dashboard in content if dashboard['content_usage.content_type'] == 'dashboard' and dashboard['dashboard.id'] is not None]
+    return [
+        (str(dashboard['dashboard.id']),
+         dashboard['content_usage.content_title'])
+        for dashboard in content
+        if dashboard['content_usage.content_type'] == 'dashboard'
+        and dashboard['dashboard.id'] is not None
+    ]
 
 
 def get_look_ids(content: list):
-    """ Get the look IDs for the given content.
-
-    Returns:
-      A list of look IDs.
-    """
-    return [look['look.id'] for look in content if look['content_usage.content_type'] == 'look']
+    """ Get the look IDs for the given content. """
+    return [
+        str(look['look.id'])
+        for look in content
+        if look['content_usage.content_type'] == 'look'
+    ]
 
 
 def soft_delete_dashboard(dashboard_id: str):
@@ -214,10 +232,10 @@ def soft_delete_dashboard(dashboard_id: str):
     dashboard = models40.WriteDashboard(deleted=False)
     # dashboard = models40.WriteDashboard(deleted=True)
     try:
-        sdk.update_dashboard(str(dashboard_id), body=dashboard)
-        return f"Successfully soft deleted dashboard: {dashboard_id}"
+        sdk.update_dashboard(dashboard_id, body=dashboard)
+        print(f"Successfully soft deleted dashboard: {dashboard_id}")
     except Exception as e:
-        return f"Error with soft deleting dashboard ({dashboard_id}): {e}"
+        print(f"Error with soft deleting dashboard ({dashboard_id}): {e}")
 
 
 def soft_delete_look(look_id: str):
@@ -226,27 +244,56 @@ def soft_delete_look(look_id: str):
     look = models40.WriteLookWithQuery(deleted=False)
     # look = models40.WriteLookWithQuery(deleted=True)
     try:
-        sdk.update_look(str(look_id), body=look)
-        return f"Successfully soft deleted Look: {look_id}"
+        sdk.update_look(look_id, body=look)
+        print(f"Successfully soft deleted Look: {look_id}")
     except Exception as e:
-        return f"Error with soft deleting Look ({look_id}): {e}"
+        print(f"Error with soft deleting Look ({look_id}): {e}")
 
 
 def hard_delete_dashboard(dashboard_id: str):
     """ Hard (permanently) delete a dashboard from the instanace. There is no undo for this kind of delete! """
     try:
         # todo: to toggle off safe mode and hard delete dashboards, uncomment the delete_dashboard() method
-        # sdk.delete_dashboard(str(dashboard_id))
-        return f"Successfully permanently deleted dashboard: {dashboard_id}"
+        # sdk.delete_dashboard(dashboard_id)
+        print(f"Successfully permanently deleted dashboard: {dashboard_id}")
     except Exception as e:
-        return f"Error with permanently deleting dashboard ({dashboard_id}): {e}"
+        print(f"Error permanently deleting dashboard ({dashboard_id}): {e}")
 
 
 def hard_delete_look(look_id: str):
     """ Hard (permanently) delete a Look from the instanace. There is no undo for this kind of delete! """
     try:
         # todo: to toggle off safe mode and hard delete Looks, uncomment the delete_look() method
-        # sdk.delete_look(str(look_id))
-        return f"Successfully permanently deleted Look: {look_id}"
+        # sdk.delete_look(look_id)
+        print(f"Successfully permanently deleted Look: {look_id}")
     except Exception as e:
-        return f"Error with permanently deleting Look ({look_id}): {e}"
+        print(f"Error permanently deleting Look ({look_id}): {e}")
+
+
+def backup_dashboard_lookml(dashboard_id: str, dashboard_title: str):
+    """ Backups a user-defined dashboard's LookML to a GCS bucket. """
+    created_date = datetime.today().strftime('%Y-%m-%d')
+    folder_name = f"dashboards_{created_date}"
+    file_name = f'{dashboard_id}-{dashboard_title}'
+
+    try:
+        dashboard_lookml = sdk.dashboard_lookml(
+            dashboard_id=dashboard_id)['lookml']
+
+    except error.SDKError as e:
+        dashboard_lookml = None
+        print(
+            f"Broken dashboard, dashboard LookML was not imported for dashboard {dashboard_id}.")
+
+    if dashboard_lookml:
+        try:
+            bucket = storage_client.get_bucket(GCS_BUCKET_NAME)
+            full_path = f"{folder_name}" + "/" + file_name + ".json"
+            blob = bucket.blob(full_path)
+            blob.upload_from_string(dashboard_lookml)
+            print(f"Successful GCS back up of dashboard: {dashboard_id}")
+
+        except exceptions.GoogleCloudError as e:
+            bucket = None
+            print(f"Error uploading dashboard {dashboard_id} to GCS: {e}")
+            return bucket

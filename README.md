@@ -13,10 +13,13 @@ The cleanup process implemented by this script is as follows:
 1. Schedule content clean up automation to run every 90 days.
 2. Dashboards and Looks not used in the past 90 days are archived (soft deleted). Soft deleting a piece of content means moving it to the [Trash folder](https://cloud.google.com/looker/docs/admin-spaces#trash) which only admins have access to.
    - Soft deleted content can be restored to its original folder from either the UI or with the API ([Appendix](#appendix)).
-3. Permanently delete content (i.e. remove from Trash folder) that's been soft-deleted and goes unclaimed for another 90 days.
+3. Permanently delete content (i.e. remove from Trash folder) that's been soft-deleted and goes unclaimed for another 90 days. Before permanently deleting dashboards, the dashboard LookML is saved to a GCS bucket.
+   - Permanently deleted dashboards which were backed up before deletion can be restored using the [import_dashboard_from_lookml](https://developers.looker.com/api/explorer/4.0/methods/Dashboard/import_dashboard_from_lookml?sdk=py) method.
    - ⚠️ **WARNING**: Permanently deleted content is lost forever. You cannot undo this action!
 
 Running the automation every 90 days allows the script to handle both soft-deleting and permanently deleting content at the same time. That said, the days are configurable within the script.
+
+**NOTE**: this automation only works for Looks and user-defined dashboards. The unused content email notification will contain LookML dashboards which can be deleted by removing their dashboard lkml file in their LookML project.
 
 ## Requirements
 
@@ -30,6 +33,7 @@ Running the automation every 90 days allows the script to handle both soft-delet
   - Cloud Pub/Sub API
   - Cloud Scheduler API
   - Secret Manager API
+  - Cloud Storage API
 
 ## How it works
 
@@ -37,10 +41,11 @@ The script executes the following steps each time it is run:
 
 1. Get two query IDs which run a System Activity query to identify content unused in the past 90 days and content deleted more than 90 days ago, respectively.
 2. Run both queries to get data for unused content and deleted content.
-3. Soft delete unused content
-4. Permanently delete content in Trash folder
+3. Soft delete unused content.
+4. Permanently delete content in Trash folder.
+   - Dashboards will be backed up to a GCS bucket before being deleted. Backups are not available for Looks.
 5. Send two emails containining the soft deleted and permanently deleted content in CSV format.
-   1. Delivery format can be updated on [line 185 of main.py](../looker_content_cleanup_automation/main.py#L185) to any of the [accepted formats](https://developers.looker.com/api/explorer/4.0/methods/ScheduledPlan/scheduled_plan_run_once).
+   - Delivery format can be updated on [line 185 of main.py](../looker_content_cleanup_automation/main.py#L185) to any of the [accepted formats](https://developers.looker.com/api/explorer/4.0/methods/ScheduledPlan/scheduled_plan_run_once).
 
 The script is currently in dry run / safe mode to avoid accidental content deletions while setting up this automation. This means the soft delete and hard delete functions are commented out in `main.py` (`soft_delete_dashboard`, `soft_delete_look`, `hard_delete_dashboard`, `hard_delete_look`).
 
@@ -49,8 +54,6 @@ Before running the script, in `main.py` search `todo` to:
 - Update `DAYS_BEFORE_SOFT_DELETE` (# of days content is unused before archival) and `DAYS_BEFORE_HARD_DELETE` (# of days in trash before permanently deletion).
 - Update `NOTIFICATION_EMAIL_ADDRESS` (email address for content deletion notification).
 - Toggle dry run of automation off/on depending on if you want content to be deleted.
-
-**Note**: this automation only works for Looks and user-defined dashboards. The unused content email notification will contain all LookML dashboards which can be deleted by removing their dashboard lkml file in its LookML project.
 
 ## Setup
 
@@ -64,9 +67,11 @@ The following steps assume deployment using Google Cloud UI Console. Check out [
    2. `looker-client-id`: secret value is the Client ID generated in Step 1.
    3. `looker-client-secret`: secret value is the Client Secret generated in Step 1.
 
-3. Go to Cloud Functions and create a new function.
+3.
 
-4. Cloud Functions function settings:
+4. Go to Cloud Functions and create a new function.
+
+5. Cloud Functions function settings:
 
    1. **Basics**
 
@@ -115,15 +120,15 @@ The following steps assume deployment using Google Cloud UI Console. Check out [
 
    4. Deploy the function.
 
-5. Go to Cloud IAM > IAM and grant the `App Engine default service account` (`<project-name>@appspot.gserviceaccount.com`) principal `Secret Manager Secret Accessor` role to access the secrets created in Step 2.
+6. Go to Cloud IAM > IAM and grant the `App Engine default service account` (`<project-name>@appspot.gserviceaccount.com`) principal `Secret Manager Secret Accessor` role to access the secrets created in Step 2.
 
-6. Test the automation function in dry run mode (run queries and send schedules, without soft deleting or hard deleting any content).
+7. Test the automation function in dry run mode (run queries and send schedules, without soft deleting or hard deleting any content).
 
    - Check out [this article](https://cloud.google.com/functions/docs/quickstart-python#test_the_function) for detailed instructions.
 
-7. Go to Cloud Scheduler and select `Schedule a job` (or `Create job`).
+8. Go to Cloud Scheduler and select `Schedule a job` (or `Create job`).
 
-8. Cloud Scheduler job settings:
+9. Cloud Scheduler job settings:
 
    1. **Define the schedule**
 
@@ -143,9 +148,9 @@ The following steps assume deployment using Google Cloud UI Console. Check out [
 
    3. Select `Create`
 
-9. Test the schedule (Actions > Force run) to confirm it triggers the `looker-content-cleanup-automation` function in dry run mode.
+10. Test the schedule (Actions > Force run) to confirm it triggers the `looker-content-cleanup-automation` function in dry run mode.
 
-10. After validating everything is working as expected, make the `todo` changes to `main.py` to toggle off dry run mode.
+11. After validating everything is working as expected, make the `todo` changes to `main.py` to toggle off dry run mode.
 
 ## Appendix
 
