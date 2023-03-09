@@ -10,10 +10,10 @@ Implementing an automated content cleanup process will help your instance avoid 
 
 The cleanup process implemented by this script is as follows:
 
-1. Schedule content clean up automation to run every 90 days.
-2. Dashboards and Looks not used in the past 90 days are archived (soft deleted). Soft deleting a piece of content means moving it to the [Trash folder](https://cloud.google.com/looker/docs/admin-spaces#trash) which only admins have access to.
+1. Schedule content clean up automation to run every 90 days (default).
+2. Dashboards and Looks not used in the past 90 days (default) are archived (soft deleted). Soft deleting a piece of content means moving it to the [Trash folder](https://cloud.google.com/looker/docs/admin-spaces#trash) which only admins have access to.
    - Soft deleted content can be restored to its original folder from either the UI or with the API ([Appendix](#appendix)).
-3. Permanently delete content (i.e. remove from Trash folder) that's been soft-deleted and goes unclaimed for another 90 days. Before permanently deleting dashboards, the dashboard LookML is saved to a [Google Cloud Storage](https://cloud.google.com/storage) bucket.
+3. Permanently delete content (i.e. remove from Trash folder) that's been soft-deleted and goes unclaimed for another 90 days (default). Before permanently deleting dashboards, the dashboard LookML is saved to a [Google Cloud Storage](https://cloud.google.com/storage) bucket.
    - Permanently deleted dashboards which were backed up before deletion can be restored using the [import_dashboard_from_lookml](https://developers.looker.com/api/explorer/4.0/methods/Dashboard/import_dashboard_from_lookml?sdk=py) method.
    - ⚠️ **WARNING**: Permanently deleted content is lost forever. You cannot undo this action!
 
@@ -39,7 +39,7 @@ Running the automation every 90 days allows the script to handle both soft-delet
 
 The script executes the following steps each time it is run:
 
-1. Get two query IDs which run a System Activity query to identify content unused in the past 90 days and content deleted more than 90 days ago, respectively.
+1. Get two query IDs which run a System Activity query to identify content unused in the past 90 days (default) and content deleted more than 90 days ago (default), respectively.
 2. Run both queries to get data for unused content and deleted content.
 3. Soft delete unused content.
 4. Permanently delete content in Trash folder.
@@ -49,7 +49,9 @@ The script executes the following steps each time it is run:
 
 ### Dry Run / Safe Mode
 
-The script is currently in dry run / safe mode to avoid accidental content deletions while setting up this automation. This means the soft delete and hard delete functions are commented out in `main.py` (`soft_delete_dashboard`, `soft_delete_look`, `hard_delete_dashboard`, `hard_delete_look`). In dry run mode, the automation will run the queries, send the schedules, and backup dashboards that are to be hard deleted.
+The script is currently in dry run / safe mode to avoid accidental content deletions while setting up this automation. This means the soft delete and hard delete functions are commented out in `main.py` (`soft_delete_dashboard`, `soft_delete_look`, `hard_delete_dashboard`, `hard_delete_look`).
+
+In dry run mode, the automation will run the queries, send the schedules, and backup dashboards that are to be hard deleted without actually deleting any content.
 
 ### Required before running the script
 
@@ -66,7 +68,7 @@ Before deploying to production, please abide by the principle of least privilege
 
 The following steps assume deployment using the Google Cloud UI Console.
 
-1. Obtain a [Looker API3 Key](https://docs.looker.com/admin-options/settings/users#api3_keys)
+1. Obtain a [Looker API3 Key](https://docs.looker.com/admin-options/settings/users#api3_keys).
 
 2. In `main.py` update:
 
@@ -87,7 +89,7 @@ The following steps assume deployment using the Google Cloud UI Console.
 
    1. **Name your bucket**: `looker-automation-dashboards-backup`
 
-      - Update the `GCS_BUCKET_NAME` variable with this value on [line 32 of main.py](../looker_content_cleanup_automation/main.py#L32).
+      - Update `GCS_BUCKET_NAME` with this value on [line 32 of main.py](../looker_content_cleanup_automation/main.py#L32).
       - Select `Continue`
 
    2. **Choose where to store your date**
@@ -110,7 +112,7 @@ The following steps assume deployment using the Google Cloud UI Console.
 
 6. Go to Cloud Functions and create a new function.
 
-7. Cloud Functions function suggested settings, to modify as necessary:
+7. Cloud Functions function suggested settings, modify as necessary:
 
    1. **Basics**
 
@@ -162,7 +164,7 @@ The following steps assume deployment using the Google Cloud UI Console.
 8. Go to Cloud IAM > IAM and grant the `App Engine default service account` (`<project-name>@appspot.gserviceaccount.com`) principal:
 
    1. `Secret Manager Secret Accessor` role to access the secrets created in Step 2.
-   2. `Storage Object Creator`
+   2. `Storage Object Creator` role to backup dashboards to the GCS bucket created in Step 5.
 
 9. Test the automation function in dry run mode (run queries, backup dashboards, and send schedules, without soft deleting or hard deleting any content).
 
