@@ -132,13 +132,13 @@ def get_deleted_content_query_id(days: int):
         model="system__activity",
         view="content_usage",
         fields=[
-            "dashboard.id",
-            "look.id",
             "content_usage.content_title",
             "content_usage.content_type",
             "content_usage.last_accessed_date",
             "dashboard.deleted_date",
-            "look.deleted_date"
+            "dashboard.id",
+            "look.deleted_date",
+            "look.id"
         ],
         dynamic_fields='[{"category":"dimension",\
             "expression":"diff_days(coalesce(${dashboard.deleted_date},${look.deleted_date}), now())",\
@@ -272,7 +272,7 @@ def hard_delete_look(look_id: str):
 
 
 def backup_dashboard_lookml(dashboard_id: str, dashboard_title: str):
-    """ Backups a user-defined dashboard's LookML to a GCS bucket. """
+    """ Saves a user-defined dashboard's LookML to a GCS bucket. """
     created_date = datetime.today().strftime('%Y-%m-%d')
     folder_name = f"dashboards_{created_date}"
     file_name = f'{dashboard_id}-{dashboard_title}'
