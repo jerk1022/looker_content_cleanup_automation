@@ -89,11 +89,11 @@ def get_unused_content_query_id(days: int):
         model="system__activity",
         view="content_usage",
         fields=[
-            "dashboard.id",
-            "look.id",
             "content_usage.content_title",
             "content_usage.content_type",
-            "content_usage.last_accessed_date"
+            "content_usage.last_accessed_date",
+            "dashboard.id",
+            "look.id"
         ],
         pivots=None,
         fill_fields=None,
