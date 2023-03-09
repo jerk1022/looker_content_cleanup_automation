@@ -23,7 +23,7 @@ Running the automation every 90 days allows the script to handle both soft-delet
 
 ### Automation Diagram
 
-![diagram](../looker_content_cleanup_automation/docs/img/automation_diagram.png?raw=true)
+![diagram](https://user-images.githubusercontent.com/61256217/224135309-1afc0acb-ab6f-425f-8157-34421dba52f6.png)
 
 ## Requirements
 
