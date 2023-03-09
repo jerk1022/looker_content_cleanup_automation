@@ -21,6 +21,10 @@ Running the automation every 90 days allows the script to handle both soft-delet
 
 **NOTE**: this automation only works for Looks and user-defined dashboards. The unused content email notification will contain LookML dashboards which can be deleted by removing their dashboard lkml file in their LookML project.
 
+### Automation Diagram
+
+![diagram](../looker_content_cleanup_automation/docs/img/automation_diagram.png)
+
 ## Requirements
 
 - Looker instance in which you have Admin permissions.
