@@ -26,12 +26,13 @@ from datetime import datetime
 
 # todo: enter desired configuration
 GCP_PROJECT_ID = ""
-GCS_BUCKET_NAME = ""
 DAYS_BEFORE_SOFT_DELETE = 90
 DAYS_BEFORE_HARD_DELETE = 90
 NOTIFICATION_EMAIL_ADDRESS = "email@address.com"
+GCS_BUCKET_NAME = ""
 
 
+# Initialize Looker SDK & Google Cloud Storage
 sdk = looker_sdk.init40()
 storage_client = storage.Client(project=GCP_PROJECT_ID)
 

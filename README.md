@@ -23,7 +23,7 @@ Running the automation every 90 days allows the script to handle both soft-delet
 
 ## Requirements
 
-- Looker instance in which you have Admin or at least `see_system_activity` and `schedule_external_look_emails` permissions.
+- Looker instance in which you have Admin permissions.
 - Google Cloud Project with the following APIs enabled:
   - Artifact Registry API
   - Cloud Run Admin API
@@ -62,16 +62,18 @@ In `main.py` search `todo` to:
 
 ## Setup
 
-The following steps assume deployment using Google Cloud UI Console. Check out ["Your First Function: Python"](https://cloud.google.com/functions/docs/first-python) for steps to deploy using the `gcloud` command-line tool.
+Before deploying to production, please abide by the principle of least privilege and modify the service account used for this automation to meet your company's security standards and has their approval.
+
+The following steps assume deployment using the Google Cloud UI Console.
 
 1. Obtain a [Looker API3 Key](https://docs.looker.com/admin-options/settings/users#api3_keys)
 
 2. In `main.py` update:
 
    1. `GCP_PROJECT_ID` on [line 28](../looker_content_cleanup_automation/main.py#L28)
-   2. `DAYS_BEFORE_SOFT_DELETE` on [line 30](../looker_content_cleanup_automation/main.py#L30)
-   3. `DAYS_BEFORE_HARD_DELETE` on [line 31](../looker_content_cleanup_automation/main.py#L31)
-   4. `NOTIFICATION_EMAIL_ADDRESS` on [line 32](../looker_content_cleanup_automation/main.py#L32)
+   2. `DAYS_BEFORE_SOFT_DELETE` on [line 29](../looker_content_cleanup_automation/main.py#L29)
+   3. `DAYS_BEFORE_HARD_DELETE` on [line 30](../looker_content_cleanup_automation/main.py#L30)
+   4. `NOTIFICATION_EMAIL_ADDRESS` on [line 31](../looker_content_cleanup_automation/main.py#L31)
 
 3. Go to [Cloud Secret Manager](https://cloud.google.com/secret-manager) and enable the Secret Manager API. Create the following secrets:
 
@@ -85,7 +87,7 @@ The following steps assume deployment using Google Cloud UI Console. Check out [
 
    1. **Name your bucket**: `looker-automation-dashboards-backup`
 
-      - Update the `GCS_BUCKET_NAME` variable with this value on [line 29 of main.py](../looker_content_cleanup_automation/main.py#L29).
+      - Update the `GCS_BUCKET_NAME` variable with this value on [line 32 of main.py](../looker_content_cleanup_automation/main.py#L32).
       - Select `Continue`
 
    2. **Choose where to store your date**
